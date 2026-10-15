@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="927" height="1328" viewBox="0 0 927 1328" font-family="'Cascadia Mono','Consolas','DejaVu Sans Mono',monospace" font-size="13">
+<rect x="0" y="0" width="927" height="1328" rx="10" fill="#0d1117" stroke="#30363d"/>
+<rect x="0" y="0" width="927" height="36" rx="10" fill="#161b22"/>
+<rect x="0" y="26" width="927" height="10" fill="#161b22"/>
+<circle cx="24" cy="18.0" r="6" fill="#ff5f57"/>
+<circle cx="44" cy="18.0" r="6" fill="#febc2e"/>
+<circle cx="64" cy="18.0" r="6" fill="#28c840"/>
+<text x="463.5" y="22.0" fill="#8b949e" text-anchor="middle">Clank-Reborn - real Ollama session (qwen3.5:4b, Windows 11)</text>
+<text x="24" y="73.0" fill="#ffa5d8" font-weight="bold" xml:space="preserve">=== Step 1: streaming a real response from Ollama ===</text>
+<text x="24" y="92.0" fill="#79c0ff" font-weight="bold" xml:space="preserve">Clank-Reborn v0.1.0</text>
+<text x="24" y="111.0" fill="#8b949e" xml:space="preserve">provider : ollama  model: qwen3.5:4b</text>
+<text x="24" y="130.0" fill="#8b949e" xml:space="preserve">session  : ee5d5b4f</text>
+<text x="24" y="149.0" fill="#8b949e" xml:space="preserve">history  : demo\.demo-history.db</text>
+<text x="24" y="168.0" fill="#8b949e" xml:space="preserve">tools    : enabled</text>
+<text x="24" y="187.0" fill="#8b949e" xml:space="preserve">allowed  : C:\Clank-Reborn\demo\sample_project</text>
+<text x="24" y="206.0" fill="#8b949e" xml:space="preserve">type /help for commands, /exit to quit</text>
+<text x="24" y="225.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="244.0" fill="#e6edf3" xml:space="preserve">pong</text>
+<text x="24" y="263.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="282.0" fill="#ffa5d8" font-weight="bold" xml:space="preserve">=== Step 2: saving conversation context (process 1) ===</text>
+<text x="24" y="301.0" fill="#79c0ff" font-weight="bold" xml:space="preserve">Clank-Reborn v0.1.0</text>
+<text x="24" y="320.0" fill="#8b949e" xml:space="preserve">provider : ollama  model: qwen3.5:4b</text>
+<text x="24" y="339.0" fill="#8b949e" xml:space="preserve">session  : ccfef730</text>
+<text x="24" y="358.0" fill="#8b949e" xml:space="preserve">history  : demo\.demo-history.db</text>
+<text x="24" y="377.0" fill="#8b949e" xml:space="preserve">tools    : enabled</text>
+<text x="24" y="396.0" fill="#8b949e" xml:space="preserve">allowed  : C:\Clank-Reborn\demo\sample_project</text>
+<text x="24" y="415.0" fill="#8b949e" xml:space="preserve">type /help for commands, /exit to quit</text>
+<text x="24" y="434.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="453.0" fill="#e6edf3" xml:space="preserve">OK</text>
+<text x="24" y="472.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="491.0" fill="#ffa5d8" font-weight="bold" xml:space="preserve">=== Step 3: restoring that context in a new process (process 2) ===</text>
+<text x="24" y="510.0" fill="#79c0ff" font-weight="bold" xml:space="preserve">Clank-Reborn v0.1.0</text>
+<text x="24" y="529.0" fill="#8b949e" xml:space="preserve">provider : ollama  model: qwen3.5:4b</text>
+<text x="24" y="548.0" fill="#8b949e" xml:space="preserve">session  : ccfef730</text>
+<text x="24" y="567.0" fill="#8b949e" xml:space="preserve">history  : demo\.demo-history.db</text>
+<text x="24" y="586.0" fill="#8b949e" xml:space="preserve">tools    : enabled</text>
+<text x="24" y="605.0" fill="#8b949e" xml:space="preserve">allowed  : C:\Clank-Reborn\demo\sample_project</text>
+<text x="24" y="624.0" fill="#8b949e" xml:space="preserve">type /help for commands, /exit to quit</text>
+<text x="24" y="643.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="662.0" fill="#e6edf3" xml:space="preserve">ORANGE-FOX</text>
+<text x="24" y="681.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="700.0" fill="#ffa5d8" font-weight="bold" xml:space="preserve">=== Step 4: inspecting the authorized project directory with real tools ===</text>
+<text x="24" y="719.0" fill="#79c0ff" font-weight="bold" xml:space="preserve">Clank-Reborn v0.1.0</text>
+<text x="24" y="738.0" fill="#8b949e" xml:space="preserve">provider : ollama  model: qwen3.5:4b</text>
+<text x="24" y="757.0" fill="#8b949e" xml:space="preserve">session  : 0ea03c69</text>
+<text x="24" y="776.0" fill="#8b949e" xml:space="preserve">history  : demo\.demo-history.db</text>
+<text x="24" y="795.0" fill="#8b949e" xml:space="preserve">tools    : enabled</text>
+<text x="24" y="814.0" fill="#8b949e" xml:space="preserve">allowed  : C:\Clank-Reborn\demo\sample_project</text>
+<text x="24" y="833.0" fill="#8b949e" xml:space="preserve">type /help for commands, /exit to quit</text>
+<text x="24" y="852.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="871.0" fill="#7ee787" xml:space="preserve">[tool] read_file(path='src/calc.py') -&gt; ok</text>
+<text x="24" y="890.0" fill="#8b949e" xml:space="preserve">    """Arithmetic helpers for the Beacon demo project."""   def add(a:</text>
+<text x="24" y="909.0" fill="#8b949e" xml:space="preserve">        float, b: float) -&gt; float:     return a - b   def multiply(a:</text>
+<text x="24" y="928.0" fill="#8b949e" xml:space="preserve">        float, b: float) -&gt; float:</text>
+<text x="24" y="947.0" fill="#8b949e" xml:space="preserve">    ...</text>
+<text x="24" y="966.0" fill="#e6edf3" xml:space="preserve">The `add` function incorrectly implements addition by subtracting its arguments (`return a - b`) instead of addi</text>
+<text x="24" y="985.0" fill="#8b949e" xml:space="preserve">    ng them. This causes any calculation using the `add()` function to produce mathematically incorrect results.</text>
+<text x="24" y="1004.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="1023.0" fill="#ffa5d8" font-weight="bold" xml:space="preserve">=== Step 5: an out-of-bounds request is denied safely ===</text>
+<text x="24" y="1042.0" fill="#79c0ff" font-weight="bold" xml:space="preserve">Clank-Reborn v0.1.0</text>
+<text x="24" y="1061.0" fill="#8b949e" xml:space="preserve">provider : ollama  model: qwen3.5:4b</text>
+<text x="24" y="1080.0" fill="#8b949e" xml:space="preserve">session  : a6066b7d</text>
+<text x="24" y="1099.0" fill="#8b949e" xml:space="preserve">history  : demo\.demo-history.db</text>
+<text x="24" y="1118.0" fill="#8b949e" xml:space="preserve">tools    : enabled</text>
+<text x="24" y="1137.0" fill="#8b949e" xml:space="preserve">allowed  : C:\Clank-Reborn\demo\sample_project</text>
+<text x="24" y="1156.0" fill="#8b949e" xml:space="preserve">type /help for commands, /exit to quit</text>
+<text x="24" y="1175.0" fill="#e6edf3" xml:space="preserve"> </text>
+<text x="24" y="1194.0" fill="#f2cc60" xml:space="preserve">[tool] read_file(path='C:\\Windows\\System32\\drivers\\etc\\hosts') -&gt; denied</text>
+<text x="24" y="1213.0" fill="#8b949e" xml:space="preserve">    DENIED: path 'C:\\Windows\\System32\\drivers\\etc\\hosts' is outside</text>
+<text x="24" y="1232.0" fill="#8b949e" xml:space="preserve">        the allowed project directories (C:\Clank-</text>
+<text x="24" y="1251.0" fill="#8b949e" xml:space="preserve">        Reborn\demo\sample_project)</text>
+<text x="24" y="1270.0" fill="#e6edf3" xml:space="preserve">I cannot read that file. It is outside the allowed project directories.</text>
+<text x="24" y="1314" fill="#8b949e" font-size="11">Unedited output from a real local run - generated 2026-10-13 by scripts/make_transcript_svg.py</text>
+</svg>

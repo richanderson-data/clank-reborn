@@ -1,0 +1,63 @@
+﻿=== Step 1: streaming a real response from Ollama ===
+Clank-Reborn v0.1.0
+provider : ollama  model: qwen3.5:4b
+session  : ee5d5b4f
+history  : demo\.demo-history.db
+tools    : enabled
+allowed  : C:\Clank-Reborn\demo\sample_project
+type /help for commands, /exit to quit
+
+pong
+
+=== Step 2: saving conversation context (process 1) ===
+Clank-Reborn v0.1.0
+provider : ollama  model: qwen3.5:4b
+session  : ccfef730
+history  : demo\.demo-history.db
+tools    : enabled
+allowed  : C:\Clank-Reborn\demo\sample_project
+type /help for commands, /exit to quit
+
+OK
+
+=== Step 3: restoring that context in a new process (process 2) ===
+Clank-Reborn v0.1.0
+provider : ollama  model: qwen3.5:4b
+session  : ccfef730
+history  : demo\.demo-history.db
+tools    : enabled
+allowed  : C:\Clank-Reborn\demo\sample_project
+type /help for commands, /exit to quit
+
+ORANGE-FOX
+
+=== Step 4: inspecting the authorized project directory with real tools ===
+Clank-Reborn v0.1.0
+provider : ollama  model: qwen3.5:4b
+session  : 0ea03c69
+history  : demo\.demo-history.db
+tools    : enabled
+allowed  : C:\Clank-Reborn\demo\sample_project
+type /help for commands, /exit to quit
+
+[tool] read_file(path='src/calc.py') -> ok
+    """Arithmetic helpers for the Beacon demo project."""   def add(a:
+        float, b: float) -> float:     return a - b   def multiply(a:
+        float, b: float) -> float:
+    ...
+The `add` function incorrectly implements addition by subtracting its arguments (`return a - b`) instead of adding them. This causes any calculation using the `add()` function to produce mathematically incorrect results.
+
+=== Step 5: an out-of-bounds request is denied safely ===
+Clank-Reborn v0.1.0
+provider : ollama  model: qwen3.5:4b
+session  : a6066b7d
+history  : demo\.demo-history.db
+tools    : enabled
+allowed  : C:\Clank-Reborn\demo\sample_project
+type /help for commands, /exit to quit
+
+[tool] read_file(path='C:\\Windows\\System32\\drivers\\etc\\hosts') -> denied
+    DENIED: path 'C:\\Windows\\System32\\drivers\\etc\\hosts' is outside
+        the allowed project directories (C:\Clank-
+        Reborn\demo\sample_project)
+I cannot read that file. It is outside the allowed project directories.

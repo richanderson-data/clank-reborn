@@ -1,0 +1,9 @@
+Beacon project notes
+====================
+
+Release code name: ORANGE-FOX
+Release date: 2026-11-01
+Owner: demo user
+
+Known issue: something in src/ is returning wrong totals.
+The support hotline is not a real phone number.

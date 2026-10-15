@@ -1,0 +1,46 @@
+name: Integration (live Ollama)
+
+# Manual workflow: installs Ollama on the runner, pulls a small model, and
+# runs the opt-in live integration tests. Kept out of the default CI so
+# contributors never pay the model download or need local models.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Ollama model to pull and test
+        required: true
+        default: qwen2.5:1.5b
+
+permissions:
+  contents: read
+
+jobs:
+  ollama:
+    name: live Ollama tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package and dev tools
+        run: python -m pip install -e ".[dev]"
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama and pull the model
+        env:
+          OLLAMA_MODEL: ${{ inputs.model }}
+        run: |
+          ollama serve &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:11434/api/tags >/dev/null && break
+            sleep 1
+          done
+          ollama pull "$OLLAMA_MODEL"
+      - name: Run live integration tests
+        env:
+          CLANK_TEST_OLLAMA: "1"
+          CLANK_TEST_MODEL: ${{ inputs.model }}
+        run: python -m pytest tests/integration/test_ollama_live.py -v

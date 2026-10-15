@@ -1,0 +1,4 @@
+﻿=== Step 6: switching to DeepSeek when no key is configured ===
+$ python -m clank --provider deepseek --no-tools -p "ping"
+error: DeepSeek requires an API key. Set DEEPSEEK_API_KEY (or CLANK_DEEPSEEK_API_KEY) in your environment or .env file.
+exit code: 2
