@@ -106,24 +106,23 @@ def test_unexpected_stream_failure_emits_actionable_error(workspace, monkeypatch
     assert "do not expose internal data" not in response.text
 
 
-def test_status_exposes_configured_provider_not_credentials(workspace):
-    workspace.settings.provider = "deepseek"
-    workspace.settings.model = "configured-cloud-model"
-    workspace.settings.deepseek_api_key = "private-sentinel"
+def test_status_exposes_ollama_configuration_without_credentials(workspace):
+    workspace.settings.model = "configured-local-model"
     response = requests.get(workspace.url + "/api/status", headers=auth(workspace), timeout=5)
-    assert response.json()["provider"] == "deepseek"
-    assert response.json()["model"] == "configured-cloud-model"
-    assert "private-sentinel" not in response.text
+    assert response.json()["model"] == "configured-local-model"
+    assert "provider" not in response.json()
 
 
 @pytest.mark.parametrize("web_enabled", [True, False])
-def test_cloud_web_does_not_grant_project_access(workspace, monkeypatch, web_enabled):
-    provider = FakeProvider([[TextDelta("cloud response"), Done()]])
+def test_web_toggle_does_not_change_local_file_tools(workspace, monkeypatch, web_enabled):
+    provider = FakeProvider([[TextDelta("local response"), Done()]])
     monkeypatch.setattr("clank.web.create_provider", lambda settings: provider)
     response = requests.post(workspace.url + "/api/chat", headers=auth(workspace),
-        json={"prompt": "public question", "model": "fake", "provider": "deepseek",
-              "cloud_consent": True, "cloud_tools": False, "web_enabled": web_enabled}, timeout=5)
+        json={"prompt": "public question", "model": "fake", "web_enabled": web_enabled}, timeout=5)
     assert "event: done" in response.text
     tools = provider.calls[0]["tools"] or []
     names = {tool["function"]["name"] for tool in tools}
-    assert names == ({"web_search", "read_webpage", "get_weather"} if web_enabled else set())
+    expected = {"list_directory", "read_file", "search_text", "git_info"}
+    if web_enabled:
+        expected |= {"web_search", "read_webpage", "get_weather"}
+    assert names == expected

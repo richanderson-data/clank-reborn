@@ -1,4 +1,4 @@
-﻿=== Step 6: switching to DeepSeek when no key is configured ===
-$ python -m clank --provider deepseek --no-tools -p "ping"
-error: DeepSeek requires an API key. Set DEEPSEEK_API_KEY (or CLANK_DEEPSEEK_API_KEY) in your environment or .env file.
+﻿=== Step 6: Ollama is the only supported provider ===
+$ CLANK_PROVIDER=unsupported python -m clank --no-tools -p "ping"
+error: Unsupported provider 'unsupported'; Clank-Reborn supports Ollama only.
 exit code: 2

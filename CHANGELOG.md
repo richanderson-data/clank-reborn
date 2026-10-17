@@ -8,9 +8,14 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Public search/page/weather tools and read-only Git inspection.
+- Argument-array project commands, configurable 100-round tool budget, and
+  non-stopping progress/blocker review every 20 rounds.
+- Release regressions for untracked/force-added private artifacts, Unicode Git
+  history, history-scan failures, and fast-exiting oversized command output.
 - Local browser workspace with streaming answers, model selection, saved
   conversations, visible file evidence, Markdown rendering, and export.
-- Browser authorization, host/origin checks, and explicit cloud consent.
+- Browser authorization, host/origin checks, and Ollama model selection.
 - Refresh-connection control and launcher setup guidance with available-port selection.
 - Release regressions for browser failures, exports, provider shapes, and persistence.
 - Opt-in autonomous edit/test mode in the same session loop, exact text edits,
@@ -19,8 +24,12 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Windows Git-history decoding uses explicit UTF-8 instead of the locale codec.
+- Hygiene scanning includes untracked source and reports oversized/private
+  release candidates without printing discovered secret values.
+- Fast-exiting commands exceeding the monitored output limit no longer pass.
+- Public capability and release-status documentation corrected after review.
 - Windows junction escape in recursive search.
-- Provider switching now remembers per-provider models.
 - Incomplete streams no longer report success.
 - Tool calls/results persist atomically even when the browser disconnects.
 - Bounded file reads, nonfinite timeout rejection, and actionable database errors.
@@ -36,9 +45,6 @@ providers, persistent sessions, and permission-controlled read-only tools.
 - Ollama provider: streaming `/api/chat` (NDJSON), tool calling, model
   listing, model-not-found hints, and typed errors for connection failures,
   HTTP errors, malformed streams, mid-stream errors, stalls, and drops.
-- DeepSeek provider: streaming OpenAI-compatible chat completions (SSE),
-  tool-call delta accumulation, model listing, API-key configuration, and
-  401/402-specific guidance.
 - Persistent sessions in SQLite (`~/.clank-reborn/clank.db` by default):
   create, append, list, resume by id or unambiguous prefix, cascade delete,
   auto-derived titles, and JSON round-trips for tool calls.
@@ -52,9 +58,8 @@ providers, persistent sessions, and permission-controlled read-only tools.
   escapes, and symlink escapes; denials become structured tool results.
 - CLI: one-shot (`-p`), `--continue`, `--session`, `--allow-dir`
   (repeatable), `--no-tools`, `--list-models`, `--list-sessions`,
-  `--provider`, `--model`, `--db`, `--host`, `--version`; interactive REPL
-  with `/help`, `/new`, `/sessions`, `/history`, `/tools`, `/model`,
-  `/provider`, `/exit`.
+  `--model`, `--db`, `--host`, `--version`; interactive REPL with `/help`,
+  `/new`, `/sessions`, `/history`, `/tools`, `/model`, `/exit`.
 - Terminal UI: streaming token output, tool result previews, colored
   statuses, Windows VT enabling, `NO_COLOR`, UTF-8 stdio reconfiguration,
   and an encode-replace fallback for legacy codepages.
@@ -63,7 +68,7 @@ providers, persistent sessions, and permission-controlled read-only tools.
 - Test suite: 128 tests, including fake NDJSON/SSE HTTP servers that
   exercise real streaming, abrupt connection resets, stalled reads,
   malformed payloads, and error-during-stream paths; opt-in live
-  integration tests for Ollama and DeepSeek.
+  integration tests for Ollama.
 - Repository hygiene: `scripts/security_check.py` scans the working tree
   and git history for secrets, credentials, personal paths, and emails, and
   verifies `.gitignore` coverage for sensitive files.
@@ -82,4 +87,3 @@ providers, persistent sessions, and permission-controlled read-only tools.
   replacement characters instead of aborting.
 - Read timeouts during streaming were reported as generic connection
   errors; stalls are now distinguished from drops in user-facing messages.
-

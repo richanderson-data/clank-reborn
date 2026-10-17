@@ -1,8 +1,8 @@
 """Shared fixtures.
 
-Provider tests run against real local HTTP servers that stream NDJSON or
-SSE bytes over a socket, so streaming, timeouts, and connection failures
-are exercised for real without needing Ollama, DeepSeek, or API credits.
+Provider tests run against a real local HTTP server that streams NDJSON bytes
+over a socket, so Ollama streaming, timeouts, and connection failures are
+exercised without needing a running Ollama service.
 """
 
 from __future__ import annotations
@@ -107,55 +107,6 @@ class OllamaHandler(_Handler):
             time.sleep(0.005)
 
 
-class DeepSeekHandler(_Handler):
-    def do_GET(self) -> None:
-        state = self.server.state  # type: ignore[attr-defined]
-        if self.path == "/models":
-            if state.get("models_status"):
-                self._send_json(
-                    state["models_status"],
-                    state.get("models_error", {"error": {"message": "unauthorized"}}),
-                )
-                return
-            self._send_json(200, state.get("models", {"data": [{"id": "deepseek-chat"}]}))
-        else:
-            self._send_json(404, {"error": {"message": "not found"}})
-
-    def do_POST(self) -> None:
-        state = self.server.state  # type: ignore[attr-defined]
-        if self.path != "/chat/completions":
-            self._send_json(404, {"error": {"message": "not found"}})
-            return
-        body = self._read_json()
-        state["requests"].append(
-            {"body": body, "authorization": self.headers.get("Authorization")}
-        )
-        if not state["responses"]:
-            self._send_json(500, {"error": {"message": "no scripted responses"}})
-            return
-        script = state["responses"].pop(0)
-        if isinstance(script, tuple):
-            status, payload = script
-            self._send_json(status, payload)
-            return
-        self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream")
-        self.end_headers()
-        for item in script:
-            if item == "__abort__":
-                self._abort()
-            if item == "[DONE]":
-                self.wfile.write(b"data: [DONE]\n\n")
-            elif isinstance(item, tuple) and item[0] == "sleep":
-                time.sleep(item[1])
-                continue
-            elif isinstance(item, tuple) and item[0] == "raw":
-                self.wfile.write((item[1] + "\n\n").encode("utf-8"))
-            else:
-                self.wfile.write(f"data: {json.dumps(item)}\n\n".encode())
-            self.wfile.flush()
-            time.sleep(0.005)
-
 
 class FakeServer:
     def __init__(self, httpd: ThreadingHTTPServer, state: dict):
@@ -197,14 +148,6 @@ def ollama_server() -> FakeServer:
 
 
 @pytest.fixture
-def deepseek_server() -> FakeServer:
-    state: dict = {"responses": [], "requests": []}
-    server = _start(DeepSeekHandler, state)
-    yield server
-    server.shutdown()
-
-
-@pytest.fixture
 def project_dir(tmp_path: Path) -> Path:
     root = tmp_path / "project"
     (root / "src").mkdir(parents=True)
@@ -226,7 +169,6 @@ def store(tmp_path: Path) -> Store:
 @pytest.fixture
 def settings(project_dir: Path, tmp_path: Path) -> Settings:
     return Settings(
-        provider="ollama",
         model="fake-model",
         db_path=tmp_path / "history.db",
         allow_dirs=[project_dir],

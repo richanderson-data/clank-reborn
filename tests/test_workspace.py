@@ -9,7 +9,6 @@ import requests
 from clank.cli import handle_command
 from clank.providers import create_provider
 from clank.providers.base import Done, TextDelta
-from clank.providers.deepseek import DeepSeekProvider
 from clank.providers.ollama import OllamaProvider
 from clank.session import ChatSession, open_session
 from clank.tools import fs
@@ -37,27 +36,12 @@ def test_search_denies_windows_junction(project_dir, tmp_path):
         junction.rmdir()
 
 
-def test_provider_switch_round_trip(store, settings):
-    settings.deepseek_api_key = "test-placeholder"
-    settings.cloud_consent = True
-    settings.model = "qwen3.5:4b"
+def test_model_switch_keeps_ollama_provider(store, settings):
     session = open_session(store, settings, NullUI(), create_provider(settings))
     handle_command("/model qwen3.5:9b", session, settings, store, NullUI())
-    handle_command("/provider deepseek", session, settings, store, NullUI())
-    assert session.provider.name == "deepseek"
-    handle_command("/provider ollama", session, settings, store, NullUI())
     assert session.provider.name == "ollama"
     assert session.provider.model == "qwen3.5:9b"
     assert settings.model == "qwen3.5:9b"
-
-
-def test_failed_switch_preserves_current_provider(store, settings):
-    session = open_session(store, settings, NullUI(), create_provider(settings))
-    settings.cloud_consent = True
-    current = session.provider
-    handle_command("/provider deepseek", session, settings, store, NullUI())
-    assert session.provider is current
-    assert settings.provider == "ollama"
 
 
 def test_context_keeps_entire_current_tool_turn(store, settings):
@@ -115,12 +99,12 @@ def test_browser_stream_and_saved_history(workspace, ollama_server):
     assert [m["role"] for m in messages] == ["user", "assistant"]
 
 
-def test_cloud_requires_explicit_consent(workspace):
+def test_browser_rejects_stale_non_ollama_provider(workspace):
     response = requests.post(workspace.url + "/api/chat", headers=auth(workspace),
                              json={"prompt": "hello", "provider": "deepseek",
                                    "model": "deepseek-chat"})
     assert response.status_code == 400
-    assert "Confirm" in response.json()["error"]
+    assert "Ollama only" in response.json()["error"]
 
 
 def test_workspace_rejects_unknown_session(workspace):
@@ -167,12 +151,12 @@ def test_ollama_eof_never_persists_partial(store, settings, ollama_server):
     assert [m["role"] for m in store.messages(session.session_id)] == ["user"]
 
 
-def test_deepseek_eof_never_persists_partial(store, settings, deepseek_server):
-    from clank.errors import StreamInterrupted
-
-    deepseek_server.enqueue([{"choices": [{"delta": {"content": "unfinished"}}]}])
-    provider = DeepSeekProvider(api_key="sk-test", base_url=deepseek_server.url)
-    session = ChatSession(store, provider, None, settings, NullUI())
-    with pytest.raises(StreamInterrupted, match="completion marker"):
-        session.send("hello")
-    assert [m["role"] for m in store.messages(session.session_id)] == ["user"]
+def test_existing_history_rows_remain_readable(store, settings):
+    session = open_session(store, settings, NullUI(), FakeProvider([]))
+    store.append(session.session_id, {"role": "user", "content": "old conversation"})
+    store.append(session.session_id, {"role": "assistant", "content": "saved locally"})
+    reopened = open_session(store, settings, NullUI(), FakeProvider([]), session_id=session.session_id)
+    assert [m["content"] for m in store.messages(reopened.session_id)] == [
+        "old conversation",
+        "saved locally",
+    ]

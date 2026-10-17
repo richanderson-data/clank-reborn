@@ -26,7 +26,7 @@ autonomy setup adds pytest, not another orchestration framework.
 - Inspect Git status, diffs, and recent history without committing or pushing.
 - Search the web, read public pages, and check current city weather with source links.
 - Resume SQLite conversations and export their saved contents as Markdown.
-- Optionally use DeepSeek, clearly marked as cloud and requiring explicit consent.
+- Use Ollama locally for chat, tools, and autonomous work.
 - Enable autonomous mode to edit project files, run fixed tests, and iterate.
 
 Read-only chat is the default. Enable autonomy with a single browser switch;
@@ -161,24 +161,7 @@ including static symlink/junction escapes. It is not an OS security boundary
 against another process racing filesystem changes. Files inside approved
 roots may contain secrets: common credential filenames are excluded from
 file tools, but this is not a complete secret detector. Approve a narrow project folder, not your home
-directory, and inspect cloud/export content carefully.
-
-### Optional DeepSeek
-
-Set `DEEPSEEK_API_KEY` in your environment or ignored `.env` file.
-The browser then offers DeepSeek with explicit consent. Switching an existing
-conversation to cloud sends its existing history, including earlier file
-results, even if new file tools are disabled.
-
-Terminal use:
-
-```powershell
-$env:DEEPSEEK_API_KEY = "your-key"
-.venv\Scripts\python.exe -m clank --provider deepseek --model deepseek-chat --cloud-consent
-```
-
-DeepSeek has HTTP/SSE regression coverage but was not live-verified here
-because no key was configured. API use may incur provider charges.
+directory, and inspect history/export content carefully.
 
 ## Terminal use
 
@@ -189,8 +172,7 @@ because no key was configured. API use may incur provider charges.
 ```
 
 Commands: `/help`, `/new`, `/sessions`, `/history`, `/tools`,
-`/model [name]`, `/provider [name] [model]`, `/exit`.
-Provider switching remembers the last model used for each provider in that terminal session.
+`/model [name]`, `/exit`.
 
 Run `python -m clank --help` for all flags. Configuration precedence:
 flags → environment → working-directory `.env` → defaults.
@@ -236,14 +218,16 @@ $env:CLANK_TEST_MODEL = "qwen3.5:4b"
 See [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) for current local results and limits.
 Older completion reports describe earlier checkpoints, not the current tool set.
 The tested runtime versions are recorded in `requirements-runtime.txt`.
-GitHub CI is configured but has not run until the repository is published.
+GitHub CI is configured for the repository; remote CI results will be added after
+publication. Local release validation is recorded in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
 The hygiene checker is a lightweight aid, not a guarantee that no secrets exist.
 
 ## Architecture and limits
 
-Browser/CLI → session turn loop → provider + read-only tools → SQLite history.
+Browser/CLI → session turn loop → Ollama + tools → SQLite history.
+Default tools are read-only; explicit autonomy adds edits, tests, and commands.
 `clank/web.py` serves packaged static assets and streams events.
-`providers/` adapts Ollama NDJSON and DeepSeek SSE.
+`providers/` adapts Ollama NDJSON.
 `tools/` resolves paths against approved roots.
 Related assistant tool calls and results are stored atomically.
 
@@ -258,4 +242,5 @@ the sample project's bug is intentional.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). No publication has been performed.
+MIT — see [LICENSE](LICENSE). Publication remains paused pending final source-only
+wheel verification.

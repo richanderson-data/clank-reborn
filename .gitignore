@@ -6,6 +6,20 @@ env/
 # Secrets and local configuration
 .env
 *.env.local
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Model downloads belong in the model runtime, never in this source release
+*.gguf
+*.ggml
+*.safetensors
+pytorch_model*.bin
 
 # Local databases and conversation history
 .clank-backups/
@@ -14,6 +28,10 @@ env/
 *.db-shm
 *.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 
 # Logs
 *.log

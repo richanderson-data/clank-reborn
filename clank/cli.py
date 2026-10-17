@@ -8,7 +8,7 @@ from pathlib import Path
 
 from . import __version__
 from .command_line import split_command
-from .config import PROVIDERS, Settings, load_env_file
+from .config import Settings, load_env_file
 from .db import Store
 from .errors import ClankError, ConfigError, ProviderError, StreamInterrupted
 from .providers import Provider, create_provider
@@ -22,7 +22,6 @@ HELP_TEXT = """commands:
   /history         show the last messages of the current session
   /tools           list tools and allowed directories
   /model [name]    show available models or switch model
-  /provider [name] show current provider or switch provider (ollama, deepseek)
   /exit            quit
 anything else is sent to the model."""
 
@@ -36,7 +35,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-p", "--prompt", metavar="TEXT", help="send one prompt, print the answer, exit"
     )
-    parser.add_argument("--provider", choices=PROVIDERS, help="model provider")
     parser.add_argument("--model", metavar="NAME", help="model to use")
     parser.add_argument(
         "--host",
@@ -75,11 +73,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--port", type=int, default=8787, help="browser workspace port (default 8787)"
     )
-    parser.add_argument(
-        "--cloud-consent",
-        action="store_true",
-        help="allow sending this conversation and tool outputs to DeepSeek",
-    )
     parser.add_argument("--list-models", action="store_true", help="list provider models and exit")
     parser.add_argument(
         "--list-sessions", action="store_true", help="list stored sessions and exit"
@@ -88,8 +81,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def apply_overrides(settings: Settings, args: argparse.Namespace) -> Settings:
-    if args.provider:
-        settings.provider = args.provider
     if args.model:
         settings.model = args.model
     if args.host:
@@ -106,7 +97,6 @@ def apply_overrides(settings: Settings, args: argparse.Namespace) -> Settings:
         settings.max_tool_rounds = args.max_tool_rounds
     if args.offline:
         settings.web_enabled = False
-    settings.cloud_consent = args.cloud_consent
     settings.autonomous = args.autonomous
     if args.test_command:
         try:
@@ -122,7 +112,7 @@ def apply_overrides(settings: Settings, args: argparse.Namespace) -> Settings:
 
 
 def make_provider(settings: Settings, allow_missing_model: bool = False) -> Provider:
-    if allow_missing_model and settings.provider == "ollama" and not settings.model:
+    if allow_missing_model and not settings.model:
         from .providers.ollama import OllamaProvider
 
         timeout = (settings.connect_timeout, settings.read_timeout)
@@ -236,42 +226,10 @@ def handle_command(
         if rest:
             session.provider.model = rest
             settings.model = rest
-            settings.provider_models[session.provider.name] = rest
             ui.info(f"model set to {rest}")
             return session, True
         list_models(session.provider, ui)
         return session, True
-    if command == "provider":
-        if not rest:
-            ui.info(f"current provider: {session.provider.name} (model {session.provider.model})")
-            return session, True
-        target, _, selected_model = rest.partition(" ")
-        if target not in PROVIDERS:
-            ui.warning(f"unknown provider {rest!r}; choose from: {', '.join(PROVIDERS)}")
-            return session, True
-        previous_provider = settings.provider
-        previous_model = settings.model
-        settings.provider_models[session.provider.name] = session.provider.model
-        if target == "deepseek" and not settings.cloud_consent:
-            ui.warning(
-                "DeepSeek sends history and file contents to the cloud. "
-                "Restart with --cloud-consent to enable it."
-            )
-            return session, True
-        settings.provider = target
-        settings.model = selected_model.strip() or settings.provider_models.get(target, "")
-        try:
-            new_provider = make_provider(settings)
-        except ClankError as exc:
-            settings.provider = previous_provider
-            settings.model = previous_model
-            ui.error(str(exc))
-            return session, True
-        session.provider = new_provider
-        settings.model = new_provider.model
-        ui.info(f"provider set to {new_provider.name} (model {new_provider.model})")
-        return session, True
-
     ui.warning(f"unknown command /{command}; type /help for commands")
     return session, True
 
@@ -333,19 +291,6 @@ def main(argv: list[str] | None = None) -> int:
 
         return serve(settings, args.port)
 
-    if (
-        settings.provider == "deepseek"
-        and not settings.cloud_consent
-        and not args.list_models
-        and not args.list_sessions
-    ):
-        print(
-            "error: DeepSeek sends conversation history and tool outputs to the cloud. "
-            "Use --cloud-consent to explicitly enable it.",
-            file=sys.stderr,
-        )
-        return 2
-
     with Store(settings.db_path) as store:
         return _main_with_store(args, settings, store)
 
@@ -388,7 +333,7 @@ def _main_with_store(args: argparse.Namespace, settings: Settings, store: Store)
         )
     ui.banner(
         version=__version__,
-        provider=session.provider.name,
+        provider="ollama",
         model=session.provider.model,
         session=session.session_id[:8],
         db_path=store.path,

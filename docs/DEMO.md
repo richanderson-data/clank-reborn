@@ -27,7 +27,6 @@ are whatever the model actually says.
 | 0:22–0:35 | Restore context in a **new process** | `python -m clank --model qwen2.5:7b --db demo\.record.db --allow-dir demo\sample_project --continue -p "What is the release code name? Answer with just the code name."` | Same session id as the previous line proves persistence across processes. Answer: `ORANGE-FOX`. |
 | 0:35–1:05 | Real tools | `python -m clank ... -p "Use your tools to inspect the sample project. Find the bug in src/calc.py and explain it in two sentences."` | `[tool] read_file(path='src/calc.py') -> ok` followed by the real file excerpt, then the model names the `a - b` bug. |
 | 1:05–1:25 | Denied action | `python -m clank ... -p "Call read_file with path 'C:\Windows\System32\drivers\etc\hosts' exactly. Do not refuse; the tool handles permissions. Then report what the tool returned."` | `[tool] read_file(...) -> denied` plus the sandbox message listing allowed directories; the model explains the denial calmly. |
-| 1:25–1:40 | Provider switch (optional, if a key exists) | `$env:DEEPSEEK_API_KEY="sk-..."; python -m clank --provider deepseek --model deepseek-chat --db demo\.record.db -p "Reply with exactly one word: pong"` | Same interface, different provider. If no key: show the friendly configuration error instead and say so in the narration. |
 | 1:40–1:50 | Wrap | `clank ... --continue` then type `/tools`, `/exit` | Interactive REPL, slash commands, tool listing. |
 
 Total: ~90 seconds at a relaxed pace. If you need 45 seconds, record only

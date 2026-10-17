@@ -150,6 +150,22 @@ def test_stop_prevents_next_edit(actions, project_dir):
     assert not (project_dir / "never.txt").exists()
 
 
+@pytest.mark.parametrize("tests", [True, False])
+def test_fast_exiting_process_cannot_bypass_output_limit(actions, monkeypatch, tests):
+    monkeypatch.setattr("clank.tools.autonomous.MAX_TEST_OUTPUT", 10000)
+    # Let a real subprocess finish between polls, reproducing the review finding.
+    monkeypatch.setattr(actions.cancelled, "wait", lambda timeout: time.sleep(0.3))
+    command = [sys.executable, "-c", "print('x'*2000000)"]
+    actions.command = command
+    with pytest.raises(ToolError, match="output limit exceeded") as exc:
+        if tests:
+            actions.run_tests()
+        else:
+            actions.run_command(command)
+    assert len(str(exc.value)) < 21000
+    assert actions.test_status == ("output limit exceeded" if tests else "not run")
+
+
 def test_default_mode_exposes_no_write_or_test_tools(store, settings):
     session = open_session(store, settings, NullUI(), FakeProvider([]))
     assert {"list_directory", "read_file", "search_text", "git_info", "web_search", "read_webpage", "get_weather"} == set(session.registry.names())

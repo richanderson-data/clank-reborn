@@ -10,7 +10,6 @@ from clank.config import Settings
 from clank.db import Store
 from clank.errors import ClankError, ConfigError, ProviderProtocolError
 from clank.providers.base import Done, ToolCall
-from clank.providers.deepseek import DeepSeekProvider
 from clank.providers.ollama import OllamaProvider
 from clank.session import SYSTEM_PROMPT, ChatSession
 from clank.tools.fs import read_file
@@ -99,16 +98,6 @@ def test_ollama_bad_shapes_become_protocol_errors(ollama_server, chunk):
     with pytest.raises(ProviderProtocolError):
         events = list(provider.chat_stream([]))
         assert not events or not isinstance(events[0], Done)
-
-
-@pytest.mark.parametrize(
-    "chunk", [[], {"choices": ["bad"]}, {"choices": [{"delta": {"tool_calls": ["bad"]}}]}]
-)
-def test_deepseek_bad_shapes_become_protocol_errors(deepseek_server, chunk):
-    deepseek_server.enqueue([chunk])
-    provider = DeepSeekProvider(api_key="sk-test", base_url=deepseek_server.url)
-    with pytest.raises(ProviderProtocolError):
-        list(provider.chat_stream([]))
 
 
 @pytest.mark.parametrize(

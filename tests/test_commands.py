@@ -114,12 +114,6 @@ def test_failed_replacement_leaves_no_phantom_change(actions, monkeypatch):
     assert not (actions.root / "new.txt").exists()
 
 
-def test_deepseek_chat_still_requires_consent(tmp_path):
-    from clank import cli
-
-    assert cli.main(["--provider", "deepseek", "--db", str(tmp_path / "history.db"), "-p", "hello"]) == 2
-
-
 def test_backup_order_is_reliable_with_identical_clock_ticks(actions, monkeypatch):
     monkeypatch.setattr("clank.tools.autonomous.time.time_ns", lambda: 5)
     actions.write_file("test.txt", "first")
@@ -145,14 +139,3 @@ def test_incomplete_model_response_is_not_saved_or_executed(store, settings, rea
     with pytest.raises(StreamInterrupted, match="Partial output was not saved"):
         session.send("do something")
     assert [m["role"] for m in store.messages(session.session_id)] == ["user"]
-
-
-def test_deepseek_local_session_listing_needs_no_cloud_consent(tmp_path, monkeypatch, capsys):
-    from clank import cli
-
-    def unexpected_provider(*args, **kwargs):
-        pytest.fail("Listing local history must not create a network provider")
-
-    monkeypatch.setattr(cli, "make_provider", unexpected_provider)
-    assert cli.main(["--provider", "deepseek", "--list-sessions", "--db", str(tmp_path / "history.db")]) == 0
-    assert "consent" not in capsys.readouterr().err

@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const initialToken = new URLSearchParams(location.hash.slice(1)).get("token");
 if (initialToken) { sessionStorage.setItem("clank-token", initialToken); history.replaceState(null, "", "/"); }
 const token = sessionStorage.getItem("clank-token") || "";
-let sessionId = null, busy = false, status = null, localModel = "", conversation = [];
+let sessionId = null, busy = false, status = null, conversation = [];
 const headers = () => ({"Authorization": "Bearer " + token, "Content-Type": "application/json"});
 function error(text) { $("error").textContent = text; $("error").hidden = !text; }
 async function api(path) { const r = await fetch(path, {headers: headers()}); const data = await r.json(); if (!r.ok) throw new Error(data.error || "Workspace request failed"); return data; }
@@ -37,7 +37,7 @@ function finishMessage(item, caption = "") {
 }
 function setBusy(value) {
   busy = value; $("send").disabled = value; $("prompt").disabled = value;
-  $("new").disabled = value; $("model").disabled = value; $("provider").disabled = value;
+  $("new").disabled = value; $("model").disabled = value;
   $("export").disabled = value; $("retry").disabled = value;
   $("autonomous").disabled=value;$("web-enabled").disabled=value;$("changes").disabled=value;$("stop").hidden=!value;$("stop").disabled=true;$("stop").textContent="Stop";
   document.querySelectorAll("[data-prompt],.session").forEach(b => b.disabled = value);
@@ -68,13 +68,12 @@ async function resume(id) {
 async function send(prompt) {
   if(busy || !prompt.trim()) return;
   if(!$("model").value) {error("Choose an installed model. If none appear, start Ollama and install a model, then reload.");return;}
-  if($("provider").value==="deepseek"&&!$("consent").checked){error("Confirm the cloud notice before using DeepSeek.");return;}
   setBusy(true); error("");
   let current=null, toolCount=0, completed=false;
   const thinking=document.createElement("div");thinking.className="thinking";thinking.textContent="Clank is thinking and checking the evidence…";$("messages").append(thinking);scroll();
   const started=performance.now();
   try {
-    const response=await fetch("/api/chat",{method:"POST",headers:headers(),body:JSON.stringify({prompt,session_id:sessionId,model:$("model").value,provider:$("provider").value,cloud_consent:$("consent").checked,cloud_tools:$("cloud-tools").checked,autonomous:$("autonomous").checked,web_enabled:$("web-enabled").checked})});
+    const response=await fetch("/api/chat",{method:"POST",headers:headers(),body:JSON.stringify({prompt,session_id:sessionId,model:$("model").value,autonomous:$("autonomous").checked,web_enabled:$("web-enabled").checked})});
     if(!response.ok){const data=await response.json();throw new Error(data.error||"Request failed");}
     $("welcome").hidden=true; message("user",prompt); $("prompt").value="";
     const reader=response.body.getReader(), decoder=new TextDecoder();let buffer="";
@@ -88,7 +87,7 @@ async function send(prompt) {
       if(type==="error")throw new Error(data.text);
       if(type==="notice")error(data.text);
       if(type==="progress"){const progress=document.createElement("div");progress.className="thinking";progress.textContent=data.text;$("messages").append(progress);}
-      if(type==="done"){completed=true;thinking.remove();finishMessage(current,`${data.stopped_early?"Task incomplete":data.test_status?"Fixed verification: "+data.test_status:$("provider").value==="ollama"?"Ollama answer":"Cloud answer"} · ${data.changed_files?.length||0} backed-up file edits · ${toolCount} tool calls · ${((performance.now()-started)/1000).toFixed(1)}s`);}
+      if(type==="done"){completed=true;thinking.remove();finishMessage(current,`${data.stopped_early?"Task incomplete":data.test_status?"Fixed verification: "+data.test_status:"Ollama answer"} · ${data.changed_files?.length||0} backed-up file edits · ${toolCount} tool calls · ${((performance.now()-started)/1000).toFixed(1)}s`);}
       scroll();
     }
     for(;;){const {done,value}=await reader.read();buffer+=decoder.decode(value||new Uint8Array(),{stream:!done});let boundary;while((boundary=buffer.indexOf("\n\n"))!==-1){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);event(block);}if(done)break;}
@@ -100,15 +99,13 @@ $("composer").onsubmit=e=>{e.preventDefault();send($("prompt").value);};
 $("prompt").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send($("prompt").value);}};
 document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>send(b.dataset.prompt));
 $("new").onclick=()=>{if(busy)return;closeHistory();sessionId=null;conversation=[];$("messages").replaceChildren();$("welcome").hidden=false;error("");loadSessions().catch(e=>error(e.message));$("prompt").focus();};
-function providerChanged(){const cloud=$("provider").value==="deepseek";if(cloud&&$("model").value)localModel=$("model").value;$("cloud").hidden=!cloud;$("consent").checked=false;$("cloud-tools").checked=false;$("model").replaceChildren();const models=cloud?Array.from(new Set([status?.provider==="deepseek"&&status.model||"deepseek-chat","deepseek-chat","deepseek-reasoner"])):status.models;models.forEach(m=>$("model").add(new Option(m,m)));if(!cloud&&localModel&&models.includes(localModel))$("model").value=localModel;updateMode();}
-$("provider").onchange=providerChanged;
 $("export").onclick=async()=>{if(!sessionId||!conversation.length){error("Send a message or open a saved conversation first.");return;}try{$("export-text").value=(await api("/api/export?id="+encodeURIComponent(sessionId))).markdown;$("copy-export").textContent="Copy Markdown";$("export-dialog").showModal();}catch(e){error(e.message);}};
 $("close-export").onclick=()=>$("export-dialog").close();
 $("copy-export").onclick=async()=>{try{await navigator.clipboard.writeText($("export-text").value);$("copy-export").textContent="Copied ✓";}catch{$("export-text").focus();$("export-text").select();$("copy-export").textContent="Press Ctrl+C to copy";}};
 $("download-export").onclick=()=>{const url=URL.createObjectURL(new Blob([$("export-text").value],{type:"text/markdown;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="clank-conversation.md";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$("model").onchange=()=>{if($("provider").value==="ollama")sessionStorage.setItem("clank-model",$("model").value);};
+$("model").onchange=()=>sessionStorage.setItem("clank-model",$("model").value);
 $("retry").onclick=()=>init();
-function updateMode(){const active=$("autonomous").checked,cloud=$("provider").value==="deepseek",web=status?.web_available&&$("web-enabled").checked;$("web-notice").hidden=!web;$("autonomy-notice").hidden=!active;$("tools-badge").textContent=active?"EDIT + TEST":status?.tools?"READ ONLY":"CHAT ONLY";$("mode-caption").textContent=(cloud?"Cloud":"Local")+(active?" · Autonomous commands":" · Chat")+(web?" · Web on":" · Web off");}
+function updateMode(){const active=$("autonomous").checked,web=status?.web_available&&$("web-enabled").checked;$("web-notice").hidden=!web;$("autonomy-notice").hidden=!active;$("tools-badge").textContent=active?"EDIT + TEST":status?.tools?"READ ONLY":"CHAT ONLY";$("mode-caption").textContent="Ollama"+(active?" · Autonomous commands":" · Chat")+(web?" · Web on":" · Web off");}
 $("web-enabled").onchange=()=>{sessionStorage.setItem("clank-web-enabled",String($("web-enabled").checked));updateMode();};
 $("autonomous").onchange=updateMode;
 $("stop").onclick=async()=>{try{const response=await fetch("/api/cancel",{method:"POST",headers:headers(),body:"{}"});const data=await response.json();if(!response.ok)throw new Error(data.error);$("stop").disabled=true;$("stop").textContent="Stopping…";error("Stop requested. Waiting for the current step; a silent model may take until its next event or read timeout.");}catch(e){error(e.message);}};
@@ -118,13 +115,11 @@ function closeHistory(){document.querySelector(".sidebar").classList.remove("ope
 $("show-history").onclick=()=>{document.querySelector(".sidebar").classList.add("open");$("show-history").setAttribute("aria-expanded","true");$("close-history").focus();};
 $("close-history").onclick=()=>{closeHistory();$("show-history").focus();};
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHistory();});
-async function init(){if(busy)return;error("");try{status=await api("/api/status");$("provider").value="ollama";$("cloud").hidden=true;$("consent").checked=false;$("cloud-tools").checked=false;$("mode-caption").textContent="Local chat · Approved files only";$("model").replaceChildren();status.models.forEach(m=>$("model").add(new Option(m,m)));const preferred=sessionStorage.getItem("clank-model")||status.model||status.models.find(m=>m==="qwen3.5:4b")||status.models[0];if(preferred&&status.models.includes(preferred))$("model").value=preferred;localModel=$("model").value;
-  if(status.deepseek_available&&!Array.from($("provider").options).some(o=>o.value==="deepseek"))$("provider").add(new Option("DeepSeek · Cloud","deepseek"));
-  if(status.provider==="deepseek"&&status.deepseek_available){$("provider").value="deepseek";providerChanged();if(status.model)$("model").value=status.model;}
-  $("connection").textContent=$("provider").value==="deepseek"?"Cloud workspace · Consent required":status.models.length?"Local workspace · Connected":"Local workspace · Ollama unavailable";
+async function init(){if(busy)return;error("");try{status=await api("/api/status");$("mode-caption").textContent="Ollama · Approved files only";$("model").replaceChildren();status.models.forEach(m=>$("model").add(new Option(m,m)));const preferred=sessionStorage.getItem("clank-model")||status.model||status.models.find(m=>m==="qwen3.5:4b")||status.models[0];if(preferred&&status.models.includes(preferred))$("model").value=preferred;
+  $("connection").textContent=status.models.length?"Ollama · Connected":"Ollama · Unavailable";
   const root=status.roots[0]||"Your workspace";$("project-name").textContent=root.split(/[\\/]/).filter(Boolean).pop();$("project-path").textContent=status.roots.join(" · ");$("tools-badge").textContent=status.tools?"READ ONLY":"CHAT ONLY";
   $("web-control").hidden=!status.web_available;$("web-enabled").checked=status.web_available&&sessionStorage.getItem("clank-web-enabled")!=="false";$("autonomy-control").hidden=!status.autonomous_available;$("changes").hidden=!status.autonomous_available;$("autonomous").checked=false;$("test-command").textContent="Fixed tests: "+JSON.stringify(status.test_command||[]);updateMode();
   $("test-command").textContent += " · Task budget: "+status.max_tool_rounds+" tool rounds, progress review every 20.";
-  if(status.error&&$("provider").value==="ollama")error(status.error);await loadSessions();
+  if(status.error)error(status.error);await loadSessions();
  }catch(e){error(e.message);$("connection").textContent="Open the private workspace link to connect";}}
 init();

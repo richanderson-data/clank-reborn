@@ -3,7 +3,7 @@
 Settings come from, in order of precedence:
 
 1. Command line flags (applied by the CLI after from_env()).
-2. Environment variables (CLANK_* plus DEEPSEEK_API_KEY).
+2. Environment variables (CLANK_*).
 3. A .env file in the working directory (does not override the environment).
 4. Built-in defaults.
 
@@ -20,10 +20,7 @@ from pathlib import Path
 
 from .errors import ConfigError
 
-PROVIDERS = ("ollama", "deepseek")
 DEFAULT_OLLAMA_HOST = "http://localhost:11434"
-DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
 DEFAULT_MAX_HISTORY = 40
 DEFAULT_MAX_TOOL_ROUNDS = 100
 DEFAULT_CONNECT_TIMEOUT = 10.0
@@ -91,11 +88,8 @@ def _env_float(env: dict[str, str], key: str, default: float) -> float:
 
 @dataclass
 class Settings:
-    provider: str = "ollama"
     model: str = ""
     ollama_host: str = DEFAULT_OLLAMA_HOST
-    deepseek_api_key: str = ""
-    deepseek_base_url: str = DEFAULT_DEEPSEEK_BASE_URL
     db_path: Path = field(default_factory=default_db_path)
     allow_dirs: list[Path] = field(default_factory=lambda: [Path.cwd()])
     max_history: int = DEFAULT_MAX_HISTORY
@@ -103,37 +97,29 @@ class Settings:
     connect_timeout: float = DEFAULT_CONNECT_TIMEOUT
     read_timeout: float = DEFAULT_READ_TIMEOUT
     tools_enabled: bool = True
-    file_tools_enabled: bool = True
     web_enabled: bool = True
-    provider_models: dict[str, str] = field(default_factory=dict)
-    cloud_consent: bool = False
     autonomous: bool = False
     test_command: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self.provider = self.provider.strip().lower()
-        if self.provider not in PROVIDERS:
-            raise ConfigError(
-                f"Unknown provider {self.provider!r}. Choose one of: {', '.join(PROVIDERS)}"
-            )
         self.db_path = Path(self.db_path).expanduser()
         self.allow_dirs = [Path(p).expanduser() for p in self.allow_dirs]
-        if self.autonomous and (len(self.allow_dirs) != 1 or not self.tools_enabled or not self.file_tools_enabled):
+        if self.autonomous and (len(self.allow_dirs) != 1 or not self.tools_enabled):
             raise ConfigError("Autonomous mode needs one project directory and enabled tools")
 
     @classmethod
     def from_env(cls, environ: dict[str, str] | None = None) -> Settings:
         env = environ if environ is not None else os.environ
-        api_key = env.get("CLANK_DEEPSEEK_API_KEY") or env.get("DEEPSEEK_API_KEY") or ""
+        configured_provider = env.get("CLANK_PROVIDER", "").strip().lower()
+        if configured_provider and configured_provider != "ollama":
+            raise ConfigError(
+                f"Unsupported provider {configured_provider!r}; Clank-Reborn supports Ollama only."
+            )
         db_raw = env.get("CLANK_DB_PATH", "").strip()
         return cls(
-            provider=env.get("CLANK_PROVIDER", "ollama"),
             model=env.get("CLANK_MODEL", "").strip(),
             ollama_host=env.get("CLANK_OLLAMA_HOST", DEFAULT_OLLAMA_HOST).strip()
             or DEFAULT_OLLAMA_HOST,
-            deepseek_api_key=api_key.strip(),
-            deepseek_base_url=env.get("CLANK_DEEPSEEK_BASE_URL", DEFAULT_DEEPSEEK_BASE_URL).strip()
-            or DEFAULT_DEEPSEEK_BASE_URL,
             db_path=Path(db_raw) if db_raw else default_db_path(),
             max_history=_env_int(env, "CLANK_MAX_HISTORY", DEFAULT_MAX_HISTORY),
             max_tool_rounds=_env_int(env, "CLANK_MAX_TOOL_ROUNDS", DEFAULT_MAX_TOOL_ROUNDS),

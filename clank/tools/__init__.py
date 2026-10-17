@@ -88,7 +88,7 @@ class ToolRegistry:
             return ToolResult(False, f"ERROR: {name} failed unexpectedly ({type(exc).__name__}); try corrected arguments or another tool")
 
 
-def build_default_registry(sandbox: Sandbox, autonomy=None, web_enabled=False, file_tools_enabled=True) -> ToolRegistry:
+def build_default_registry(sandbox: Sandbox, autonomy=None, web_enabled=False) -> ToolRegistry:
     tools = [
         ToolSpec(
             name="list_directory",
@@ -161,8 +161,6 @@ def build_default_registry(sandbox: Sandbox, autonomy=None, web_enabled=False, f
         {"type": "object", "properties": {"action": {"type": "string", "enum": ["status", "diff", "staged", "log"]}, "path": {"type": "string"}}},
         lambda action="status", path=".": git_info(sandbox, action, path),
     ))
-    if not file_tools_enabled:
-        tools = []
     if web_enabled:
         from .web_tools import tool_specs as web_specs
 

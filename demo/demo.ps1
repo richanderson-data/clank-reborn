@@ -99,20 +99,6 @@ Invoke-Step 5 "A denied action is reported safely" @(
 
 Write-Host ""
 Write-Host ("=" * 60)
-Write-Host "Step 6: switching providers (DeepSeek)" -ForegroundColor Cyan
-Write-Host ("=" * 60)
-if ($env:DEEPSEEK_API_KEY -or $env:CLANK_DEEPSEEK_API_KEY) {
-    & $script:python -m clank --provider deepseek --model deepseek-chat --no-tools --db $demoDb `
-        -p "Reply with exactly one word: pong"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "(clank exited with code $LASTEXITCODE)" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "DeepSeek is not configured on this machine, so this step is skipped." -ForegroundColor Yellow
-    Write-Host "Set DEEPSEEK_API_KEY and re-run to include it, or try the live error:"
-    & $script:python -m clank --provider deepseek --no-tools --db $demoDb -p "ping"
-}
-
 Write-Host ""
 Write-Host ("=" * 60)
 Write-Host "Demo complete" -ForegroundColor Green

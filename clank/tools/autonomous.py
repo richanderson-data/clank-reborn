@@ -272,6 +272,10 @@ class AutonomousTools:
                             process.wait(timeout=3)
                         break
                     self.cancelled.wait(0.1)
+                # A fast process can exit between polls after writing too much.
+                # Check the final size before reporting a successful verification.
+                if not reason and os.fstat(output.fileno()).st_size > MAX_TEST_OUTPUT:
+                    reason = "output limit exceeded"
                 output.seek(0)
                 text = output.read(20_000).decode("utf-8", errors="replace")
                 if os.fstat(output.fileno()).st_size > 20_000:

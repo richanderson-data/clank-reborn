@@ -69,7 +69,6 @@ def test_real_tool_round_trip(provider: OllamaProvider, tmp_path: Path) -> None:
     project.mkdir()
     (project / "notes.txt").write_text("the secret word is banana\n", encoding="utf-8")
     settings = Settings(
-        provider="ollama",
         model=MODEL,
         db_path=tmp_path / "live.db",
         allow_dirs=[project],

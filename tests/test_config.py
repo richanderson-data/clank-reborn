@@ -17,16 +17,16 @@ def test_load_env_file_parses_values(tmp_path: Path) -> None:
         "# comment\n"
         "\n"
         "CLANK_MODEL=llama3.2\n"
-        'export CLANK_PROVIDER="deepseek"\n'
-        "DEEPSEEK_API_KEY='sk-test'\n"
+        'export CLANK_PROVIDER="ollama"\n'
+        "CLANK_OLLAMA_HOST='http://localhost:11434'\n"
         "BROKEN LINE\n",
         encoding="utf-8",
     )
     env: dict[str, str] = {}
     assert load_env_file(env_file, env) == 3
     assert env["CLANK_MODEL"] == "llama3.2"
-    assert env["CLANK_PROVIDER"] == "deepseek"
-    assert env["DEEPSEEK_API_KEY"] == "sk-test"
+    assert env["CLANK_PROVIDER"] == "ollama"
+    assert env["CLANK_OLLAMA_HOST"] == "http://localhost:11434"
 
 
 def test_load_env_file_does_not_override(tmp_path: Path) -> None:
@@ -43,38 +43,31 @@ def test_load_env_file_missing_is_noop(tmp_path: Path) -> None:
 
 def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = Settings.from_env({})
-    assert settings.provider == "ollama"
     assert settings.model == ""
     assert settings.db_path == default_db_path()
     assert settings.max_history == DEFAULT_MAX_HISTORY
     assert settings.tools_enabled is True
 
 
-def test_settings_reads_environment() -> None:
+def test_settings_reads_ollama_environment() -> None:
     settings = Settings.from_env(
         {
-            "CLANK_PROVIDER": "DeepSeek",
-            "CLANK_MODEL": "deepseek-chat",
-            "CLANK_DEEPSEEK_API_KEY": "sk-abc",
+            "CLANK_PROVIDER": "Ollama",
+            "CLANK_MODEL": "qwen3.5:4b",
+            "CLANK_OLLAMA_HOST": "http://ollama.local:11434",
             "CLANK_MAX_HISTORY": "5",
             "CLANK_DB_PATH": r"C:\tmp\clank.db",
         }
     )
-    assert settings.provider == "deepseek"
-    assert settings.model == "deepseek-chat"
-    assert settings.deepseek_api_key == "sk-abc"
+    assert settings.model == "qwen3.5:4b"
+    assert settings.ollama_host == "http://ollama.local:11434"
     assert settings.max_history == 5
     assert settings.db_path == Path(r"C:\tmp\clank.db")
 
 
-def test_settings_falls_back_to_deepseek_api_key() -> None:
-    settings = Settings.from_env({"DEEPSEEK_API_KEY": "sk-fallback"})
-    assert settings.deepseek_api_key == "sk-fallback"
-
-
-def test_settings_rejects_unknown_provider() -> None:
-    with pytest.raises(ConfigError, match="Unknown provider"):
-        Settings.from_env({"CLANK_PROVIDER": "openai"})
+def test_settings_rejects_stale_non_ollama_provider() -> None:
+    with pytest.raises(ConfigError, match="supports Ollama only"):
+        Settings.from_env({"CLANK_PROVIDER": "deepseek"})
 
 
 def test_settings_rejects_bad_int() -> None:

@@ -95,6 +95,8 @@ RULES = [
 ]
 
 EMAIL_ALLOWLIST = {
+    "audit@example.com",
+    "copilot@github.com",
     "user@example.com",
     "you@example.com",
     "name@example.com",
@@ -138,10 +140,8 @@ def scan_text(text: str, location: str) -> list[Finding]:
                     value = match.group(2)
                     if value.lower() in PLACEHOLDERS:
                         continue
-                excerpt = line.strip()
-                if len(excerpt) > 120:
-                    excerpt = excerpt[:120] + "..."
-                findings.append(Finding(f"{location}:{lineno}", rule.name, excerpt))
+                # A release checker must not copy a discovered credential into CI logs.
+                findings.append(Finding(f"{location}:{lineno}", rule.name, "[content withheld]"))
     return findings
 
 
@@ -164,19 +164,30 @@ def _read(path: Path) -> str:
 
 def tracked_files(root: Path) -> list[Path]:
     git = subprocess.run(
-        ["git", "ls-files", "-z"],
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
         cwd=root,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
-    if git.returncode == 0 and git.stdout:
-        return [
-            root / name
-            for name in git.stdout.split("\x00")
-            if name and _is_repo_file(root / name)
-        ]
+    if git.returncode == 0:
+        return sorted({root / name for name in git.stdout.split("\x00")
+                       if name and (root / name).is_file()})
     return sorted(path for path in root.rglob("*") if _is_repo_file(path))
+
+
+def private_artifact(path: Path) -> bool:
+    """Publication-only check; this does not restrict the running assistant."""
+    name = path.name.lower()
+    return (
+        any(part.lower() in SKIP_DIRS or part.lower().endswith(".egg-info") for part in path.parts)
+        or (name.startswith(".env") and name not in {".env.example", ".env.sample", ".env.template"})
+        or path.suffix.lower() in SKIP_SUFFIXES | {".gguf", ".ggml", ".safetensors", ".pem", ".key", ".p12", ".pfx"}
+        or name.endswith((".sqlite-wal", ".sqlite-shm", ".sqlite3-wal", ".sqlite3-shm"))
+        or (name.startswith("pytorch_model") and name.endswith(".bin"))
+    )
 
 
 def scan_working_tree(root: Path, verbose: bool = False) -> list[Finding]:
@@ -186,7 +197,12 @@ def scan_working_tree(root: Path, verbose: bool = False) -> list[Finding]:
         relative = path.relative_to(root).as_posix()
         if verbose:
             print(f"  checked {relative}")
-        findings.extend(scan_text(_read(path), relative))
+        if private_artifact(Path(relative)):
+            findings.append(Finding(relative, "private/runtime artifact in release candidates", "[content withheld]"))
+        elif path.stat().st_size > MAX_FILE_BYTES:
+            findings.append(Finding(relative, "file exceeds hygiene scan limit; manual review required", "[content withheld]"))
+        else:
+            findings.extend(scan_text(_read(path), relative))
     print(f"working tree: {len(files)} file(s) scanned")
     return findings
 
@@ -197,6 +213,8 @@ def scan_git_history(root: Path) -> list[Finding]:
         cwd=root,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if count.returncode != 0:
@@ -207,21 +225,28 @@ def scan_git_history(root: Path) -> list[Finding]:
         print("git history: 0 commits; nothing to scan")
         return []
     diff = subprocess.run(
-        ["git", "log", "-p", "--all", "--no-color"],
+        ["git", "log", "-p", "--all", "--no-color", "--no-ext-diff", "--no-textconv"],
         cwd=root,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
+    if diff.returncode != 0:
+        return [Finding("git-history", "history scan failed; manual review required", "[content withheld]")]
     text = diff.stdout[:5_000_000]
     findings = scan_text(text, "git-history")
+    if len(diff.stdout) > len(text):
+        findings.append(Finding("git-history", "history exceeds hygiene scan limit; manual review required", "[content withheld]"))
     print(f"git history: scanned {commits} commit(s) of patches")
     return findings
 
 
 def check_ignored(root: Path) -> list[str]:
     probes = [".env", "secrets.db", "debug.log", ".venv/x", "private.db-wal",
-              ".clank-backups/private.json"]
+              ".clank-backups/private.json", "model.gguf", "model.safetensors",
+              ".env.production", "private.pem", "history.sqlite3-wal"]
     failures = []
     if not (root / ".git").exists():
         print("gitignore check: no .git directory; skipped")

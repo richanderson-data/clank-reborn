@@ -140,14 +140,12 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                     {
                         "models": models,
                         "model": settings.model,
-                        "provider": settings.provider,
                         "roots": [str(p.resolve()) for p in settings.allow_dirs],
                         "tools": settings.tools_enabled,
                         "web_available": settings.tools_enabled and settings.web_enabled,
                         "autonomous_available": settings.autonomous,
                         "max_tool_rounds": settings.max_tool_rounds,
                         "test_command": settings.test_command if settings.autonomous else [],
-                        "deepseek_available": bool(settings.deepseek_api_key),
                         "error": error,
                     },
                 )
@@ -229,25 +227,16 @@ class WorkspaceHandler(BaseHTTPRequestHandler):
                 raise ValueError("Choose an installed model first")
             if sid is not None and not isinstance(sid, str):
                 raise ValueError("Invalid conversation ID")
-            provider_name = data.get("provider", "ollama")
-            if provider_name not in ("ollama", "deepseek"):
-                raise ValueError("Unknown provider")
-            if provider_name == "deepseek" and data.get("cloud_consent") is not True:
-                raise ValueError("Confirm that history and file results may be sent to DeepSeek")
+            if data.get("provider", "ollama") != "ollama":
+                raise ValueError("Clank-Reborn supports Ollama only")
             autonomous = data.get("autonomous") is True
             if autonomous and not self.server.settings.autonomous:
                 raise ValueError("Autonomous mode is not enabled for this server")
-            if autonomous and provider_name == "deepseek" and data.get("cloud_tools") is not True:
-                raise ValueError("Cloud autonomy needs explicit file-access consent")
             settings = replace(
                 self.server.settings,
-                provider=provider_name,
                 model=model,
-                cloud_consent=provider_name == "deepseek",
                 autonomous=autonomous,
                 web_enabled=self.server.settings.web_enabled and data.get("web_enabled", True) is True,
-                file_tools_enabled=self.server.settings.file_tools_enabled
-                and (provider_name == "ollama" or data.get("cloud_tools") is True),
             )
             provider = create_provider(settings)
         except (ValueError, ClankError) as exc:

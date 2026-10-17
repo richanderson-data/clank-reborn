@@ -77,8 +77,6 @@ class ChatSession:
         self.settings = settings
         self.ui = ui
         self.system_prompt = system_prompt
-        if not settings.file_tools_enabled:
-            self.system_prompt += " Project-file and Git tools are disabled; do not claim project access."
         self.cancelled = cancelled or Event()
         self.sources: list[str] = []
         self.system_prompt += " Current local date/time: " + datetime.now().astimezone().isoformat() + "."
@@ -409,8 +407,7 @@ def open_session(
             if settings.autonomous
             else None
         )
-        registry = build_default_registry(sandbox, autonomy=actions, web_enabled=settings.web_enabled,
-                                          file_tools_enabled=settings.file_tools_enabled)
+        registry = build_default_registry(sandbox, autonomy=actions, web_enabled=settings.web_enabled)
     return ChatSession(
         store, provider, registry, settings, ui, session_id=session_id, cancelled=cancelled
     )

@@ -19,7 +19,7 @@ There is no agent hierarchy, queue, or policy service.
 - Final full installed-checkout suite: **189 passed, 3 skipped** in 56.64 seconds.
 - The passing suite includes four real Ollama chat tests and one real-model
   autonomous repair/test/restore test; the remaining tests are offline regressions.
-- Skips: two DeepSeek live tests (no key/opt-in) and a Windows file-symlink test
+- Skips: optional live Ollama/web/autonomy checks and a Windows file-symlink test
   requiring extra OS permission. Separate real Windows junction tests passed.
 - Offline autonomy regressions cover real subprocess success/failure, stop,
   timeout/output bounds, write boundaries, atomic history, backup/undo conflicts,
@@ -47,7 +47,7 @@ an empty explanation. Automatic verification now prevents a skipped test step;
 a factual tool-derived summary handles an empty autonomous final answer.
 A blank ordinary chat gets one retry, then a visible error.
 
-DeepSeek live use and manual macOS/Linux operation remain unverified.
+Live Ollama behavior and manual macOS/Linux operation remain unverified.
 GitHub CI is configured for Windows/Linux and Python 3.11/3.12/3.14, including
 installed-wheel checks, but has not run remotely. Context uses message-count
 trimming rather than token counting.
