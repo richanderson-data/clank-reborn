@@ -34,6 +34,15 @@ The test run included live Ollama, autonomy, and web opt-ins against the
 installed `qwen3.5:4b` model. Deterministic local HTTP fixtures do not prove
 live model quality beyond those exercised scenarios.
 
+## Publication
+
+Published as a public Ollama-only beta at
+https://github.com/richanderson-data/clank-reborn from commit
+`4045ea8c14e456fc415228d3abbe57a8c0230832`. The first GitHub CI run passed:
+all seven Ubuntu/Windows Python 3.11/3.12/3.14 test jobs and the lint job,
+including wheel installation and package smoke:
+https://github.com/richanderson-data/clank-reborn/actions/runs/39073251796
+
 ## Publication boundary
 
 Publish source, MIT license, examples, and reviewed public documentation only.

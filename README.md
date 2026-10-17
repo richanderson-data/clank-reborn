@@ -218,8 +218,10 @@ $env:CLANK_TEST_MODEL = "qwen3.5:4b"
 See [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) for current local results and limits.
 Older completion reports describe earlier checkpoints, not the current tool set.
 The tested runtime versions are recorded in `requirements-runtime.txt`.
-GitHub CI is configured for the repository; remote CI results will be added after
-publication. Local release validation is recorded in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
+GitHub CI passed after publication for commit `4045ea8` across Ubuntu and
+Windows with Python 3.11, 3.12, and 3.14, including wheel installation and
+package smoke. Local release validation is recorded in
+[RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
 The hygiene checker is a lightweight aid, not a guarantee that no secrets exist.
 
 ## Architecture and limits
@@ -242,5 +244,5 @@ the sample project's bug is intentional.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Publication remains paused pending final source-only
-wheel verification.
+MIT — see [LICENSE](LICENSE). Public repository:
+https://github.com/richanderson-data/clank-reborn
